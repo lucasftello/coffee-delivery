@@ -1,27 +1,16 @@
-import { ReactNode, createContext, useEffect, useState } from 'react'
+import { ReactNode, createContext, useEffect, useReducer } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-interface Item {
-  id: string
-  quantity: number
-}
-
-interface Order {
-  id: number
-  items: Item[]
-  value: number
-  cep: string
-  street: string
-  number: string
-  fullAddress?: string | undefined
-  neighborhood: string
-  city: string
-  state: string
-  paymentMethod: 'credit' | 'debit' | 'cash'
-}
+import { Item, Order, cartReducer } from '../reducers/cart/reducer'
+import {
+  addItemAction,
+  checkoutAction,
+  decrementItemAction,
+  incrementItemAction,
+  removeItemAction,
+} from '../reducers/cart/actions'
 
 interface CartContextType {
-  items: Item[]
+  cart: Item[]
   addItem: (item: Item) => void
   removeItem: (itemId: string) => void
   decrementItemQuantity: (itemId: string) => void
@@ -44,63 +33,46 @@ export function CartProvider({ children }: CarProviderProps) {
     localStorage.getItem('@coffee-delivery:orders') || '[]',
   )
 
-  const [items, setItems] = useState<Item[]>(itemsInStorage)
-  const [orders, setOrders] = useState<Order[]>(ordersInStorage)
+  const [cartState, dispatch] = useReducer(cartReducer, {
+    cart: itemsInStorage,
+    orders: ordersInStorage,
+  })
+
+  const { cart, orders } = cartState
 
   const navigate = useNavigate()
 
   function addItem(item: Item) {
-    const itemExists = items.find((itemInCart) => itemInCart.id === item.id)
-
-    if (itemExists) {
-      itemExists.quantity += item.quantity
-    } else {
-      setItems((state) => [...state, item])
-    }
+    dispatch(addItemAction(item))
   }
 
   function removeItem(itemId: string) {
-    const itemsWithoutRemoved = items.filter((item) => item.id !== itemId)
-
-    setItems(itemsWithoutRemoved)
+    dispatch(removeItemAction(itemId))
   }
 
   function decrementItemQuantity(itemId: string) {
-    const itemToDecrement = items.find((item) => item.id === itemId)
-
-    if (itemToDecrement && itemToDecrement.quantity > 1) {
-      itemToDecrement.quantity -= 1
-    }
-
-    setItems((state) => [...state])
+    dispatch(decrementItemAction(itemId))
   }
 
   function incrementItemQuantity(itemId: string) {
-    const itemToIncrement = items.find((item) => item.id === itemId)
-
-    if (itemToIncrement) {
-      itemToIncrement.quantity += 1
-    }
-
-    setItems((state) => [...state])
+    dispatch(incrementItemAction(itemId))
   }
 
   function checkout(order: Order) {
-    setOrders((state) => [...state, order])
-    setItems([])
+    dispatch(checkoutAction(order))
 
     navigate(`/order/${order.id}/success`)
   }
 
   useEffect(() => {
-    localStorage.setItem('@coffee-delivery:cart', JSON.stringify(items))
+    localStorage.setItem('@coffee-delivery:cart', JSON.stringify(cart))
     localStorage.setItem('@coffee-delivery:orders', JSON.stringify(orders))
-  }, [items, orders])
+  }, [cart, orders])
 
   return (
     <CartContext.Provider
       value={{
-        items,
+        cart,
         addItem,
         removeItem,
         decrementItemQuantity,

@@ -12,7 +12,7 @@ import {
 import { NavLink } from 'react-router-dom'
 
 export function Header() {
-  const { items } = useContext(CartContext)
+  const { cart } = useContext(CartContext)
 
   return (
     <Container>
@@ -29,7 +29,7 @@ export function Header() {
 
           <CartButton to="/checkout">
             <ShoppingCart size={22} weight="fill" />
-            <Counter>{items.length}</Counter>
+            <Counter>{cart.length}</Counter>
           </CartButton>
         </Nav>
       </Content>

@@ -55,7 +55,7 @@ type OrderFormInputs = zod.infer<typeof orderFormSchema>
 
 export function Checkout() {
   const {
-    items,
+    cart,
     removeItem,
     decrementItemQuantity,
     incrementItemQuantity,
@@ -71,7 +71,7 @@ export function Checkout() {
     resolver: zodResolver(orderFormSchema),
   })
 
-  const coffeesInCart = items.map((item) => {
+  const coffeesInCart = cart.map((item) => {
     const coffeeData = coffees.find((coffee) => coffee.id === item.id)
 
     if (!coffeeData) {
@@ -105,7 +105,7 @@ export function Checkout() {
   function handleCheckout(data: OrderFormInputs) {
     const newOrder = {
       id: new Date().getTime(),
-      items,
+      items: cart,
       value: totalOrderPrice,
       ...data,
     }
@@ -117,7 +117,7 @@ export function Checkout() {
     <main>
       <Container>
         <Content>
-          {items.length > 0 ? (
+          {cart.length > 0 ? (
             <>
               <CheckoutInfos>
                 <h2>Complete seu pedido</h2>
